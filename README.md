@@ -12,6 +12,12 @@ Azure PowerShell
 ```
   PS C:\Users\azadmin> .\resquery.ps1 -SubscriptionId 00000000-0000-0000-0000-000000000000
 ```
+This will output a file at C:\Users\azadmin\Documents\azure_resource_query_date.xlsx
+
+or with an optional file path
+```
+  PS C:\Users\azadmin> .\resquery.ps1 -SubscriptionId 00000000-0000-0000-0000-000000000000 -FilePath C:\azure_resource_file.xlsx
+```
 
 #### Version 0.0.1
 * Initial Check-in
