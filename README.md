@@ -1,12 +1,11 @@
 # resquery - Azure Resource Query
 Copyright 2018 (c) MACROmantic
 Written by: christopher landry <macromantic (at) outlook.com>
-Version: 0.0.3
+Version: 0.1.0
 Date: 10-november-2018
 
 ### Requirements (Host)
 Azure PowerShell
-
 
 ### Run Instructions
 
@@ -27,3 +26,7 @@ Azure PowerShell
 
 #### Version 0.0.4
 * Fixed login check
+
+#### Version 0.1.0
+* Display Properties By Resource Type
+* Formatting Tables
