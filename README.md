@@ -7,6 +7,13 @@ Date: 10-november-2018
 ### Requirements (Host)
 Azure PowerShell
 
+
+### Run Instructions
+
+```
+  PS C:\Users\azadmin> .\resquery.ps1 -SubscriptionId 00000000-0000-0000-0000-000000000000
+```
+
 #### Version 0.0.1
 * Initial Check-in
 
