@@ -15,7 +15,7 @@
    General notes
    Copyright 2018 (c) MACROmantic
    Written by: christopher landry <macromantic (at) outlook.com>
-   Version: 0.0.2
+   Version: 0.0.3
    Date: 10-november-2018
 #>
 
@@ -43,13 +43,24 @@ function ConnectionCheck() {
     }
 }
 
-function GetResourceTypes() {
+function GetResources() {
     $outputTypes = @{}
-    $resourceTypes = Get-AzureRmResource | Select-Object ResourceType -Unique
-    foreach ($resource in $resourceTypes) {
-        $nameTokens = $resource.ResourceType.split("/")
-        $outputTypes[$nameTokens[1]] = 0
+
+    $resources = Get-AzureRmResource
+    foreach ($resource in $resources) {
+        $resourceType = $($resource.ResourceType.split("/"))[1]
+
+        if (-not($outputTypes[$resourceType])) {
+            $outputTypes[$resourceType] = @()
+        }
+        $outputTypes[$resourceType] += @{
+            Id = $resource.ResourceId;
+            Name = $resource.Name;
+            ResourceGroup = $resource.ResourceGroupName;
+            Location = $resource.Location;
+        }
     }
+
     return $outputTypes
 }
 
@@ -63,18 +74,27 @@ function ExportToExcel() {
     $excelapp.visible = $false
 
     $workbook = $excelapp.workbooks.add()
-    $sheet1 = $workbook.sheets | Where-Object { $_.name -eq "Sheet1" }
 
     $sheetCount = 0
-    foreach ($resource in $ResourceHash.Keys) { 
+    foreach ($key in $ResourceHash.Keys) { 
         $sheet = $null
         if ($sheetCount -eq 0) {   
-            $sheet = $sheet1
+            $sheet = $workbook.sheets | Where-Object { $_.name -eq "Sheet1" }
         } elseif ($sheetCount -gt 0) {
             $sheet = $workbook.sheets.add()
         }
         
-        $sheet.name = "$resource"
+        $sheet.name = "$key"
+        $rowCount = 1
+        $sheet.range("A$($rowCount):A$($rowCount)").cells = "Name"
+        $sheet.range("B$($rowCount):B$($rowCount)").cells = "Resource Group"
+        $sheet.range("C$($rowCount):C$($rowCount)").cells = "Location"
+        foreach ($resource in $ResourceHash[$key]) {
+            $rowCount++
+            $sheet.range("A$($rowCount):A$($rowCount)").cells = "$($resource.Name)"
+            $sheet.range("B$($rowCount):B$($rowCount)").cells = "$($resource.ResourceGroup)"
+            $sheet.range("C$($rowCount):C$($rowCount)").cells = "$($resource.Location)"
+        }
         
         $sheetCount++
     }
@@ -85,5 +105,5 @@ function ExportToExcel() {
 # Main #############################################
 
 ConnectionCheck
-$resourceHash = GetResourceTypes
+$resourceHash = GetResources
 ExportToExcel -ResourceHash $resourceHash
