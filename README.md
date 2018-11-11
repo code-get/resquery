@@ -24,3 +24,6 @@ Azure PowerShell
 
 #### Version 0.0.3
 * Row Data Populates
+
+#### Version 0.0.4
+* Fixed login check

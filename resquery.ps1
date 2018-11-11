@@ -15,7 +15,7 @@
    General notes
    Copyright 2018 (c) MACROmantic
    Written by: christopher landry <macromantic (at) outlook.com>
-   Version: 0.0.3
+   Version: 0.0.4
    Date: 10-november-2018
 #>
 
@@ -29,7 +29,7 @@ $ErrorActionPreference = "stop"
 
 function ConnectionCheck() {
     try {
-        Get-AzureRmSubscription -SubscriptionId $SubscriptionId | Out-Null
+        Get-AzureRmSubscription -SubscriptionId $SubscriptionId -WarningAction stop | Out-Null
         return
     } catch {
         Write-Warning "Not logged into Azure"
@@ -45,6 +45,8 @@ function ConnectionCheck() {
 
 function GetResources() {
     $outputTypes = @{}
+
+    Write-Host "Querying Azure Subscription $SubscriptionId"
 
     $resources = Get-AzureRmResource
     foreach ($resource in $resources) {
@@ -69,6 +71,8 @@ function ExportToExcel() {
         [Parameter(Mandatory)]
         $ResourceHash
     )
+
+    Write-Host "Exporting results to $FilePath"
 
     $excelapp = New-Object -ComObject Excel.Application
     $excelapp.visible = $false
