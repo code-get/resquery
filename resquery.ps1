@@ -15,7 +15,7 @@
    General notes
    Copyright 2018 (c) MACROmantic
    Written by: christopher landry <macromantic (at) outlook.com>
-   Version: 0.1.1
+   Version: 0.1.2
    Date: 10-november-2018
 #>
 
@@ -152,7 +152,29 @@ function GetResources() {
                 Name = $resource.Name;
                 ResourceGroup = $resource.ResourceGroupName;
                 Location = $resource.Location;
-                SecurityRules = "$rulesText";
+                Rule = "Rule";
+                Protocol = "Protocol";
+                Source = "Source";
+                Destination = "Destination";
+                Direction = "Direction";
+                Access = "Access";
+            }
+
+            $securityRules = ConvertFrom-Json -InputObject $nsgResource.SecurityRulesText;
+            $rulesText = ""
+            foreach ($rules in $securityRules) {
+                $outputTypes[$resourceType] += @{
+                    Id = "";
+                    Name = "";
+                    ResourceGroup = "";
+                    Location = "";
+                    Rule = $rules.Name;
+                    Protocol = $rules.Protocol;
+                    Source = $rules.SourcePortRange;
+                    Destination = $rules.DestinationPortRange;
+                    Direction = $rules.Direction;
+                    Access = $rules.Access;
+                }
             }
         } else {
             $outputTypes[$resourceType] += @{
@@ -273,7 +295,12 @@ function ExportToExcel() {
             $sheet.range("A$($rowCount):A$($rowCount)").cells = "Name"
             $sheet.range("B$($rowCount):B$($rowCount)").cells = "Resource Group"
             $sheet.range("C$($rowCount):C$($rowCount)").cells = "Location"
-            $sheet.range("D$($rowCount):D$($rowCount)").cells = "SecurityRules"
+            $sheet.range("D$($rowCount):D$($rowCount)").cells = "Rule"
+            $sheet.range("E$($rowCount):E$($rowCount)").cells = "Protocol"
+            $sheet.range("F$($rowCount):F$($rowCount)").cells = "Source"
+            $sheet.range("G$($rowCount):G$($rowCount)").cells = "Destination"
+            $sheet.range("H$($rowCount):H$($rowCount)").cells = "Direction"
+            $sheet.range("I$($rowCount):I$($rowCount)").cells = "Access"
 
             foreach ($resource in $ResourceHash[$key]) {
                 $rowCount++
@@ -281,11 +308,15 @@ function ExportToExcel() {
                 $sheet.range("A$($rowCount):A$($rowCount)").cells = "$($resource.Name)"
                 $sheet.range("B$($rowCount):B$($rowCount)").cells = "$($resource.ResourceGroup)"
                 $sheet.range("C$($rowCount):C$($rowCount)").cells = "$($resource.Location)"
-                $sheet.range("D$($rowCount):D$($rowCount)").cells = "$($resource.SecurityRules)"
-                $sheet.range("D$($rowCount):D$($rowCount)").EntireColumn.AutoFit() | Out-Null
+                $sheet.range("D$($rowCount):D$($rowCount)").cells = "$($resource.Rule)"
+                $sheet.range("E$($rowCount):E$($rowCount)").cells = "$($resource.Protocol)"
+                $sheet.range("F$($rowCount):F$($rowCount)").cells = "$($resource.Source)"
+                $sheet.range("G$($rowCount):G$($rowCount)").cells = "$($resource.Destination)"
+                $sheet.range("H$($rowCount):H$($rowCount)").cells = "$($resource.Direction)"
+                $sheet.range("I$($rowCount):I$($rowCount)").cells = "$($resource.Access)"
             }   
             
-            $rowLetter = "D"     
+            $rowLetter = "I"     
         } else {
             $rowCount = 1
             $sheet.range("A$($rowCount):A$($rowCount)").cells = "Name"
