@@ -1,11 +1,11 @@
 # resquery - Azure Resource Query
 Copyright 2018 (c) MACROmantic
 Written by: christopher landry <macromantic (at) outlook.com>
-Version: 0.1.0
+Version: 0.1.1
 Date: 10-november-2018
 
 ### Requirements (Host)
-Azure PowerShell
+[Azure PowerShell v5.8.0](https://github.com/Azure/azure-powershell/releases/tag/v5.7.0-April2018)
 
 ### Run Instructions
 
@@ -35,4 +35,7 @@ or with an optional file path
 
 #### Version 0.1.0
 * Display Properties By Resource Type
-* Formatting Tables
+* Added Basic Table Formatting
+
+#### Version 0.1.1
+* Added more VirtualNetwork columns
