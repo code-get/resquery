@@ -15,7 +15,7 @@
    General notes
    Copyright 2018 (c) MACROmantic
    Written by: christopher landry <macromantic (at) outlook.com>
-   Version: 0.1.2
+   Version: 0.1.3
    Date: 10-november-2018
 #>
 
@@ -94,23 +94,33 @@ function GetResources() {
                 -Name $resource.Name `
                 -ResourceGroupName $resource.ResourceGroupName 3> $null
 
+            $dchpOptionsText = ""
+            try {
                 $dchpOptions = ConvertFrom-Json -InputObject $vnetResource.DhcpOptions.DnsServersText
-                $dchpOptionsText = ""
+                
                 foreach ($dchpOption in $dchpOptions) {
                     $dchpOptionsText += " DnsServer: $($dchpOption.Name)"
                 }
                 if ($dchpOptionsText.Length -gt 0) {
                     $dchpOptionsText = $dchpOptionsText.Substring(0, $dchpOptionsText.Length-1)
                 }
+            } catch {
+                Write-Debug "Warning: Issue detecting Dns Servers Text"
+            }
 
+            $subnetsText = ""
+            try {
                 $subnets = ConvertFrom-Json -InputObject $vnetResource.SubnetsText
-                $subnetsText = ""
+                
                 foreach ($subnet in $subnets) {
                     $subnetsText += " Subnet: $($subnet.Name) AddressPrefix: $($subnet.AddressPrefix),"
                 }
                 if ($subnetsText.Length -gt 0) {
                     $subnetsText = $subnetsText.Substring(0, $subnetsText.Length-1)
                 }
+            } catch {
+                Write-Debug "Warning: Issue detecting Subnets Text"
+            }
 
             # More properties at:
             # https://docs.microsoft.com/en-us/dotnet/api/microsoft.azure.commands.network.models.psvirtualnetwork?view=azurerm-ps
@@ -136,15 +146,6 @@ function GetResources() {
                 -Name $resource.Name `
                 -ResourceGroupName $resource.ResourceGroupName
 
-            $securityRules = ConvertFrom-Json -InputObject $nsgResource.SecurityRulesText;
-            $rulesText = ""
-            foreach ($rules in $securityRules) {
-                $rulesText += " Rule: $($rules.Name) Protocol: $($rules.Protocol) Src: $($rules.SourcePortRange) Dest: $($rules.DestinationPortRange) Direction: $($rules.Direction) Access: $($rules.Access),"
-            }
-            if ($rulesText.Length -gt 0) {
-                $rulesText = $rulesText.Substring(0, $rulesText.Length-1)
-            }
-
             # More properties at:
             # https://docs.microsoft.com/en-us/dotnet/api/microsoft.azure.commands.network.models.psnetworksecuritygroup?view=azurerm-ps 
             $outputTypes[$resourceType] += @{
@@ -160,21 +161,24 @@ function GetResources() {
                 Access = "Access";
             }
 
-            $securityRules = ConvertFrom-Json -InputObject $nsgResource.SecurityRulesText;
-            $rulesText = ""
-            foreach ($rules in $securityRules) {
-                $outputTypes[$resourceType] += @{
-                    Id = "";
-                    Name = "";
-                    ResourceGroup = "";
-                    Location = "";
-                    Rule = $rules.Name;
-                    Protocol = $rules.Protocol;
-                    Source = $rules.SourcePortRange;
-                    Destination = $rules.DestinationPortRange;
-                    Direction = $rules.Direction;
-                    Access = $rules.Access;
+            try {
+                $securityRules = ConvertFrom-Json -InputObject $nsgResource.SecurityRulesText;
+                foreach ($rules in $securityRules) {
+                    $outputTypes[$resourceType] += @{
+                        Id = "";
+                        Name = "";
+                        ResourceGroup = "";
+                        Location = "";
+                        Rule = $rules.Name;
+                        Protocol = $rules.Protocol;
+                        Source = $rules.SourcePortRange;
+                        Destination = $rules.DestinationPortRange;
+                        Direction = $rules.Direction;
+                        Access = $rules.Access;
+                    }
                 }
+            } catch {
+                Write-Debug "Warning: Issue detecting Security Rules Text"
             }
         } else {
             $outputTypes[$resourceType] += @{
