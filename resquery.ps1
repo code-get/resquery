@@ -15,7 +15,7 @@
    General notes
    Copyright 2018 (c) MACROmantic
    Written by: christopher landry <macromantic (at) outlook.com>
-   Version: 0.1.7
+   Version: 0.1.8
    Date: 10-november-2018
 #>
 
@@ -82,7 +82,6 @@ function GetResources() {
 
             $blobResourceType = "blobContainers"
             $containers = Get-AzureStorageContainer -Context $ctx
-     
             foreach ($container in $containers) {
                 if (-not($outputTypes[$blobResourceType])) {
                     $outputTypes[$blobResourceType] = @()
@@ -91,6 +90,39 @@ function GetResources() {
                 $outputTypes[$blobResourceType] += @{
                     Id = $resource.ResourceId;
                     Name = $container.CloudBlobContainer.Name;
+                    ResourceGroup = $resource.ResourceGroupName;
+                    Location = $resource.Location;
+                    StorageAccount = $resource.Name;
+                }
+            }
+
+            $storageQueueType = "storageQueues"
+            $queues = Get-AzureStorageQueue -Context $ctx
+            foreach ($queue in $queues) {
+                if (-not($outputTypes[$storageQueueType])) {
+                    $outputTypes[$storageQueueType] = @()
+                }
+
+                $outputTypes[$storageQueueType] += @{
+                    Id = $resource.ResourceId;
+                    Name = $queue.Name;
+                    ResourceGroup = $resource.ResourceGroupName;
+                    Location = $resource.Location;
+                    StorageAccount = $resource.Name;
+                }
+            }
+
+            $storageShareType = "storageFileShares"
+            $shares = Get-AzureStorageShare -Context $ctx
+
+            foreach ($share in $shares) {
+                if (-not($outputTypes[$storageShareType])) {
+                    $outputTypes[$storageShareType] = @()
+                }
+
+                $outputTypes[$storageShareType] += @{
+                    Id = $resource.ResourceId;
+                    Name = $share.Name;
                     ResourceGroup = $resource.ResourceGroupName;
                     Location = $resource.Location;
                     StorageAccount = $resource.Name;
@@ -326,7 +358,7 @@ function ExportToExcel() {
             }   
             
             $rowLetter = "E"  
-        } elseif ($key -eq "blobContainers") {
+        } elseif ($($key -eq "blobContainers") -or $($key -eq "storageQueues") -or $($key -eq "storageFileShares")) {
             $rowCount = 1
             $sheet.range("A$($rowCount):A$($rowCount)").cells = "Name"
             $sheet.range("B$($rowCount):B$($rowCount)").cells = "Resource Group"
@@ -343,7 +375,7 @@ function ExportToExcel() {
             }   
             
             $rowLetter = "D"  
-        } elseif ($key -eq "virtualNetworks") {
+        }  elseif ($key -eq "virtualNetworks") {
             $rowCount = 1
             $sheet.range("A$($rowCount):A$($rowCount)").cells = "Name"
             $sheet.range("B$($rowCount):B$($rowCount)").cells = "Resource Group"
