@@ -15,7 +15,7 @@
    General notes
    Copyright 2018 (c) MACROmantic
    Written by: christopher landry <macromantic (at) outlook.com>
-   Version: 0.1.5
+   Version: 0.1.6
    Date: 10-november-2018
 #>
 
@@ -112,20 +112,6 @@ function GetResources() {
                 Write-Debug "Warning: Issue detecting Dns Servers Text"
             }
 
-            $subnetsText = ""
-            try {
-                $subnets = ConvertFrom-Json -InputObject $vnetResource.SubnetsText
-                
-                foreach ($subnet in $subnets) {
-                    $subnetsText += " Subnet: $($subnet.Name) AddressPrefix: $($subnet.AddressPrefix),"
-                }
-                if ($subnetsText.Length -gt 0) {
-                    $subnetsText = $subnetsText.Substring(0, $subnetsText.Length-1)
-                }
-            } catch {
-                Write-Debug "Warning: Issue detecting Subnets Text"
-            }
-
             # More properties at:
             # https://docs.microsoft.com/en-us/dotnet/api/microsoft.azure.commands.network.models.psvirtualnetwork?view=azurerm-ps
             $outputTypes[$resourceType] += @{
@@ -140,9 +126,27 @@ function GetResources() {
                 DhcpOptions = $dchpOptionsText;
                 DhcpOptionsText = $vnetResource.DhcpOptionsText;
                 ProvisioningState = $vnetResource.ProvisioningState;
-                Subnets = $subnetsText;
-                SubnetsText = $vnetResource.SubnetsText;
+                Subnet = "Subnet";
+                SubnetAddressPrefix = "Subnet Address Prefix";
+                SubnetNSG = "Subnet NSG";
                 VirtualNetworkPeerings = $vnetResource.VirtualNetworkPeerings;
+            }
+
+            try {
+                $subnets = ConvertFrom-Json -InputObject $vnetResource.SubnetsText
+                foreach ($subnet in $subnets) {
+                    $outputTypes[$resourceType] += @{
+                        Id = "";
+                        Name = "";
+                        ResourceGroup = "";
+                        Location = "";
+                        Subnet = $subnet.Name;
+                        SubnetAddressPrefix = $subnet.AddressPrefix;
+                        SubnetNSG = $subnet.networkSecurityGroups;
+                    }
+                }
+            } catch {
+                Write-Debug "Warning: Issue detecting Subnets Text"
             }
 
         } elseif ($resourceType -eq "networkSecurityGroups") {
@@ -196,7 +200,7 @@ function GetResources() {
 
     $apiManagements = Get-AzureRmApiManagement
     foreach ($apiManResource in $apiManagements) {
-        $resourceType = "ApiManagement"
+        $resourceType = "apiManagement"
         if (-not($outputTypes[$resourceType])) {
             $outputTypes[$resourceType] = @()
         }
@@ -305,9 +309,10 @@ function ExportToExcel() {
             $sheet.range("H$($rowCount):H$($rowCount)").cells = "DhcpOptions"
             $sheet.range("I$($rowCount):I$($rowCount)").cells = "DhcpOptionsText"
             $sheet.range("J$($rowCount):J$($rowCount)").cells = "ProvisioningState"
-            $sheet.range("K$($rowCount):K$($rowCount)").cells = "Subnets"
-            $sheet.range("L$($rowCount):L$($rowCount)").cells = "SubnetsText"
-            $sheet.range("M$($rowCount):M$($rowCount)").cells = "VirtualNetworkPeerings"
+            $sheet.range("K$($rowCount):K$($rowCount)").cells = "Subnet"
+            $sheet.range("L$($rowCount):L$($rowCount)").cells = "SubnetAddressPrefix"
+            $sheet.range("M$($rowCount):M$($rowCount)").cells = "SubnetNSG"
+            $sheet.range("N$($rowCount):N$($rowCount)").cells = "VirtualNetworkPeerings"
 
             foreach ($resource in $ResourceHash[$key]) {
                 $rowCount++
@@ -322,12 +327,13 @@ function ExportToExcel() {
                 $sheet.range("H$($rowCount):H$($rowCount)").cells = "$($resource.DhcpOptions)"
                 $sheet.range("I$($rowCount):I$($rowCount)").cells = "$($resource.DhcpOptionsText)"
                 $sheet.range("J$($rowCount):J$($rowCount)").cells = "$($resource.ProvisioningState)"
-                $sheet.range("K$($rowCount):K$($rowCount)").cells = "$($resource.Subnets)"
-                $sheet.range("L$($rowCount):L$($rowCount)").cells = "$($resource.SubnetsText)"
-                $sheet.range("M$($rowCount):M$($rowCount)").cells = "$($resource.VirtualNetworkPeerings)"
+                $sheet.range("K$($rowCount):K$($rowCount)").cells = "$($resource.Subnet)"
+                $sheet.range("L$($rowCount):L$($rowCount)").cells = "$($resource.SubnetAddressPrefix)"
+                $sheet.range("M$($rowCount):M$($rowCount)").cells = "$($resource.SubnetNSG)"
+                $sheet.range("N$($rowCount):N$($rowCount)").cells = "$($resource.VirtualNetworkPeerings)"
             }   
 
-            $rowLetter = "M"  
+            $rowLetter = "N"  
         } elseif ($key -eq "networkSecurityGroups") {
             $rowCount = 1
             $sheet.range("A$($rowCount):A$($rowCount)").cells = "Name"
