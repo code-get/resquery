@@ -15,7 +15,7 @@
    General notes
    Copyright 2018 (c) MACROmantic
    Written by: christopher landry <macromantic (at) outlook.com>
-   Version: 0.1.6
+   Version: 0.1.7
    Date: 10-november-2018
 #>
 
@@ -73,6 +73,37 @@ function GetResources() {
                 Sku = $diskResource.Sku.Name;
             }
             
+        } elseif ($resourceType -eq "storageAccounts") {
+            $storageAccount = Get-AzureRmStorageAccount `
+                -Name $resource.Name `
+                -ResourceGroupName $resource.ResourceGroupName;
+
+            $ctx = $storageAccount.Context
+
+            $blobResourceType = "blobContainers"
+            $containers = Get-AzureStorageContainer -Context $ctx
+     
+            foreach ($container in $containers) {
+                if (-not($outputTypes[$blobResourceType])) {
+                    $outputTypes[$blobResourceType] = @()
+                }
+
+                $outputTypes[$blobResourceType] += @{
+                    Id = $resource.ResourceId;
+                    Name = $container.CloudBlobContainer.Name;
+                    ResourceGroup = $resource.ResourceGroupName;
+                    Location = $resource.Location;
+                    StorageAccount = $resource.Name;
+                }
+            }
+
+            $outputTypes[$resourceType] += @{
+                Id = $resource.ResourceId;
+                Name = $resource.Name;
+                ResourceGroup = $resource.ResourceGroupName;
+                Location = $resource.Location;
+            }
+
         } elseif ($resourceType -eq "virtualMachines") {
             try {
                 $vmResource = Get-AzureRmVM `
@@ -128,7 +159,6 @@ function GetResources() {
                 ProvisioningState = $vnetResource.ProvisioningState;
                 Subnet = "Subnet";
                 SubnetAddressPrefix = "Subnet Address Prefix";
-                SubnetNSG = "Subnet NSG";
                 VirtualNetworkPeerings = $vnetResource.VirtualNetworkPeerings;
             }
 
@@ -142,7 +172,6 @@ function GetResources() {
                         Location = "";
                         Subnet = $subnet.Name;
                         SubnetAddressPrefix = $subnet.AddressPrefix;
-                        SubnetNSG = $subnet.networkSecurityGroups;
                     }
                 }
             } catch {
@@ -297,6 +326,23 @@ function ExportToExcel() {
             }   
             
             $rowLetter = "E"  
+        } elseif ($key -eq "blobContainers") {
+            $rowCount = 1
+            $sheet.range("A$($rowCount):A$($rowCount)").cells = "Name"
+            $sheet.range("B$($rowCount):B$($rowCount)").cells = "Resource Group"
+            $sheet.range("C$($rowCount):C$($rowCount)").cells = "Location"
+            $sheet.range("D$($rowCount):D$($rowCount)").cells = "StorageAccount"
+            
+            foreach ($resource in $ResourceHash[$key]) {
+                $rowCount++
+
+                $sheet.range("A$($rowCount):A$($rowCount)").cells = "$($resource.Name)"
+                $sheet.range("B$($rowCount):B$($rowCount)").cells = "$($resource.ResourceGroup)"
+                $sheet.range("C$($rowCount):C$($rowCount)").cells = "$($resource.Location)"
+                $sheet.range("D$($rowCount):D$($rowCount)").cells = "$($resource.StorageAccount)"
+            }   
+            
+            $rowLetter = "D"  
         } elseif ($key -eq "virtualNetworks") {
             $rowCount = 1
             $sheet.range("A$($rowCount):A$($rowCount)").cells = "Name"
@@ -311,8 +357,7 @@ function ExportToExcel() {
             $sheet.range("J$($rowCount):J$($rowCount)").cells = "ProvisioningState"
             $sheet.range("K$($rowCount):K$($rowCount)").cells = "Subnet"
             $sheet.range("L$($rowCount):L$($rowCount)").cells = "SubnetAddressPrefix"
-            $sheet.range("M$($rowCount):M$($rowCount)").cells = "SubnetNSG"
-            $sheet.range("N$($rowCount):N$($rowCount)").cells = "VirtualNetworkPeerings"
+            $sheet.range("M$($rowCount):M$($rowCount)").cells = "VirtualNetworkPeerings"
 
             foreach ($resource in $ResourceHash[$key]) {
                 $rowCount++
@@ -329,11 +374,10 @@ function ExportToExcel() {
                 $sheet.range("J$($rowCount):J$($rowCount)").cells = "$($resource.ProvisioningState)"
                 $sheet.range("K$($rowCount):K$($rowCount)").cells = "$($resource.Subnet)"
                 $sheet.range("L$($rowCount):L$($rowCount)").cells = "$($resource.SubnetAddressPrefix)"
-                $sheet.range("M$($rowCount):M$($rowCount)").cells = "$($resource.SubnetNSG)"
-                $sheet.range("N$($rowCount):N$($rowCount)").cells = "$($resource.VirtualNetworkPeerings)"
+                $sheet.range("M$($rowCount):M$($rowCount)").cells = "$($resource.VirtualNetworkPeerings)"
             }   
 
-            $rowLetter = "N"  
+            $rowLetter = "M"  
         } elseif ($key -eq "networkSecurityGroups") {
             $rowCount = 1
             $sheet.range("A$($rowCount):A$($rowCount)").cells = "Name"
