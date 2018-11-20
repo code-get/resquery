@@ -1,7 +1,7 @@
 # resquery - Azure Resource Query
 * Copyright 2018 (c) MACROmantic
 * Written by: christopher landry <macromantic (at) outlook.com>
-* Version: 0.1.4
+* Version: 0.1.5
 * Initial Date: 10-november-2018
 
 ### Requirements (Host)
@@ -45,3 +45,10 @@ or with an optional file path
 
 #### Version 0.1.3
 * Added Error handling for resource metadata queries
+
+#### Version 0.1.4
+* Added API Management Query
+* Added App Gateway Query
+
+#### Version 0.1.5
+* Added Error handling for VM query

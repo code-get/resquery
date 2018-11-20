@@ -15,7 +15,7 @@
    General notes
    Copyright 2018 (c) MACROmantic
    Written by: christopher landry <macromantic (at) outlook.com>
-   Version: 0.1.4
+   Version: 0.1.5
    Date: 10-november-2018
 #>
 
@@ -74,19 +74,23 @@ function GetResources() {
             }
             
         } elseif ($resourceType -eq "virtualMachines") {
-            $vmResource = Get-AzureRmVM `
-                -Name $resource.Name `
-                -ResourceGroupName $resource.ResourceGroupName
+            try {
+                $vmResource = Get-AzureRmVM `
+                    -Name $resource.Name `
+                    -ResourceGroupName $resource.ResourceGroupName
 
-            # More properties at:
-            # https://docs.microsoft.com/en-us/dotnet/api/microsoft.azure.management.compute.models.virtualmachine?view=azure-dotnet
-            $outputTypes[$resourceType] += @{
-                Id = $resource.ResourceId;
-                Name = $resource.Name;
-                ResourceGroup = $resource.ResourceGroupName;
-                Location = $resource.Location;
-                VMSize = $vmResource.HardwareProfile.VmSize;
-                OsType = $vmResource.StorageProfile.OsDisk.OsType;
+                # More properties at:
+                # https://docs.microsoft.com/en-us/dotnet/api/microsoft.azure.management.compute.models.virtualmachine?view=azure-dotnet
+                $outputTypes[$resourceType] += @{
+                    Id = $resource.ResourceId;
+                    Name = $resource.Name;
+                    ResourceGroup = $resource.ResourceGroupName;
+                    Location = $resource.Location;
+                    VMSize = $vmResource.HardwareProfile.VmSize;
+                    OsType = $vmResource.StorageProfile.OsDisk.OsType;
+                }
+            } catch {
+                Write-Debug "Warning: Issue querying $($resource.Name)"
             }
 
         } elseif ($resourceType -eq "virtualNetworks") {
