@@ -1,7 +1,7 @@
 # resquery - Azure Resource Query
 * Copyright 2018 (c) MACROmantic
 * Written by: christopher landry <macromantic (at) outlook.com>
-* Version: 0.1.3
+* Version: 0.1.4
 * Initial Date: 10-november-2018
 
 ### Requirements (Host)

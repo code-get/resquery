@@ -15,7 +15,7 @@
    General notes
    Copyright 2018 (c) MACROmantic
    Written by: christopher landry <macromantic (at) outlook.com>
-   Version: 0.1.3
+   Version: 0.1.4
    Date: 10-november-2018
 #>
 
@@ -187,6 +187,36 @@ function GetResources() {
                 ResourceGroup = $resource.ResourceGroupName;
                 Location = $resource.Location;
             }
+        }
+    }
+
+    $apiManagements = Get-AzureRmApiManagement
+    foreach ($apiManResource in $apiManagements) {
+        $resourceType = "ApiManagement"
+        if (-not($outputTypes[$resourceType])) {
+            $outputTypes[$resourceType] = @()
+        }
+
+        $outputTypes[$resourceType] += @{
+            Id = $apiManResource.Id;
+            Name = $apiManResource.Name;
+            ResourceGroup = $apiManResource.ResourceGroupName;
+            Location = $apiManResource.Location;
+        }
+    }
+
+    $appGateways = Get-AzureRmApplicationGateway
+    foreach ($appGateway in $appGateways) {
+        $resourceType = "applicationGateways"
+        if (-not($outputTypes[$resourceType])) {
+            $outputTypes[$resourceType] = @()
+        }
+
+        $outputTypes[$resourceType] += @{
+            Id = $appGateways.Id;
+            Name = $appGateways.Name;
+            ResourceGroup = $appGateways.ResourceGroupName;
+            Location = $appGateways.Location;
         }
     }
 
