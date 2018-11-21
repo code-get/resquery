@@ -15,7 +15,7 @@
    General notes
    Copyright 2018 (c) MACROmantic
    Written by: christopher landry <macromantic (at) outlook.com>
-   Version: 0.1.8
+   Version: 0.1.9
    Date: 10-november-2018
 #>
 
@@ -74,66 +74,70 @@ function GetResources() {
             }
             
         } elseif ($resourceType -eq "storageAccounts") {
-            $storageAccount = Get-AzureRmStorageAccount `
-                -Name $resource.Name `
-                -ResourceGroupName $resource.ResourceGroupName;
 
-            $ctx = $storageAccount.Context
+            try {
+                $storageAccount = Get-AzureRmStorageAccount `
+                    -Name $resource.Name `
+                    -ResourceGroupName $resource.ResourceGroupName;
 
-            $blobResourceType = "blobContainers"
-            $containers = Get-AzureStorageContainer -Context $ctx
-            foreach ($container in $containers) {
-                if (-not($outputTypes[$blobResourceType])) {
-                    $outputTypes[$blobResourceType] = @()
+                $ctx = $storageAccount.Context
+
+                $blobResourceType = "blobContainers"
+                $containers = Get-AzureStorageContainer -Context $ctx
+                foreach ($container in $containers) {
+                    if (-not($outputTypes[$blobResourceType])) {
+                        $outputTypes[$blobResourceType] = @()
+                    }
+
+                    $outputTypes[$blobResourceType] += @{
+                        Id = $resource.ResourceId;
+                        Name = $container.CloudBlobContainer.Name;
+                        ResourceGroup = $resource.ResourceGroupName;
+                        Location = $resource.Location;
+                        StorageAccount = $resource.Name;
+                    }
                 }
 
-                $outputTypes[$blobResourceType] += @{
+                $storageQueueType = "storageQueues"
+                $queues = Get-AzureStorageQueue -Context $ctx
+                foreach ($queue in $queues) {
+                    if (-not($outputTypes[$storageQueueType])) {
+                        $outputTypes[$storageQueueType] = @()
+                    }
+
+                    $outputTypes[$storageQueueType] += @{
+                        Id = $resource.ResourceId;
+                        Name = $queue.Name;
+                        ResourceGroup = $resource.ResourceGroupName;
+                        Location = $resource.Location;
+                        StorageAccount = $resource.Name;
+                    }
+                }
+
+                $storageShareType = "storageFileShares"
+                $shares = Get-AzureStorageShare -Context $ctx
+                foreach ($share in $shares) {
+                    if (-not($outputTypes[$storageShareType])) {
+                        $outputTypes[$storageShareType] = @()
+                    }
+
+                    $outputTypes[$storageShareType] += @{
+                        Id = $resource.ResourceId;
+                        Name = $share.Name;
+                        ResourceGroup = $resource.ResourceGroupName;
+                        Location = $resource.Location;
+                        StorageAccount = $resource.Name;
+                    }
+                }
+
+                $outputTypes[$resourceType] += @{
                     Id = $resource.ResourceId;
-                    Name = $container.CloudBlobContainer.Name;
+                    Name = $resource.Name;
                     ResourceGroup = $resource.ResourceGroupName;
                     Location = $resource.Location;
-                    StorageAccount = $resource.Name;
                 }
-            }
-
-            $storageQueueType = "storageQueues"
-            $queues = Get-AzureStorageQueue -Context $ctx
-            foreach ($queue in $queues) {
-                if (-not($outputTypes[$storageQueueType])) {
-                    $outputTypes[$storageQueueType] = @()
-                }
-
-                $outputTypes[$storageQueueType] += @{
-                    Id = $resource.ResourceId;
-                    Name = $queue.Name;
-                    ResourceGroup = $resource.ResourceGroupName;
-                    Location = $resource.Location;
-                    StorageAccount = $resource.Name;
-                }
-            }
-
-            $storageShareType = "storageFileShares"
-            $shares = Get-AzureStorageShare -Context $ctx
-
-            foreach ($share in $shares) {
-                if (-not($outputTypes[$storageShareType])) {
-                    $outputTypes[$storageShareType] = @()
-                }
-
-                $outputTypes[$storageShareType] += @{
-                    Id = $resource.ResourceId;
-                    Name = $share.Name;
-                    ResourceGroup = $resource.ResourceGroupName;
-                    Location = $resource.Location;
-                    StorageAccount = $resource.Name;
-                }
-            }
-
-            $outputTypes[$resourceType] += @{
-                Id = $resource.ResourceId;
-                Name = $resource.Name;
-                ResourceGroup = $resource.ResourceGroupName;
-                Location = $resource.Location;
+            } catch {
+                Write-Debug "Warning: Issues querying $($resource.Name)"
             }
 
         } elseif ($resourceType -eq "virtualMachines") {
@@ -231,7 +235,23 @@ function GetResources() {
             }
 
             try {
-                $securityRules = ConvertFrom-Json -InputObject $nsgResource.SecurityRulesText;
+                $defaultSecurityRules = ConvertFrom-Json -InputObject $nsgResource.DefaultSecurityRulesText
+                foreach ($defaultRule in $defaultSecurityRules) {
+                    $outputTypes[$resourceType] += @{
+                        Id = "";
+                        Name = "";
+                        ResourceGroup = "";
+                        Location = "";
+                        Rule = $rules.Name;
+                        Protocol = $rules.Protocol;
+                        Source = $defaultRule.SourcePortRange;
+                        Destination = $defaultRule.DestinationPortRange;
+                        Direction = $defaultRule.Direction;
+                        Access = $defaultRule.Access;
+                    }
+                }
+
+                $securityRules = ConvertFrom-Json -InputObject $nsgResource.SecurityRulesText
                 foreach ($rules in $securityRules) {
                     $outputTypes[$resourceType] += @{
                         Id = "";

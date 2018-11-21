@@ -1,7 +1,7 @@
 # resquery - Azure Resource Query
 * Copyright 2018 (c) MACROmantic
 * Written by: christopher landry <macromantic (at) outlook.com>
-* Version: 0.1.8
+* Version: 0.1.9
 * Initial Date: 10-november-2018
 
 ### Requirements (Host)
@@ -62,3 +62,7 @@ or with an optional file path
 #### Version 0.1.8
 * Added Queues
 * Added File Shares
+
+#### Version 0.1.8
+* Include Default Security Rules for NSGs
+* Added error handling for Storage Account Queries
