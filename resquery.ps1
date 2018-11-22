@@ -15,7 +15,7 @@
    General notes
    Copyright 2018 (c) MACROmantic
    Written by: christopher landry <macromantic (at) outlook.com>
-   Version: 0.1.9
+   Version: 0.1.10
    Date: 10-november-2018
 #>
 
@@ -137,7 +137,7 @@ function GetResources() {
                     Location = $resource.Location;
                 }
             } catch {
-                Write-Debug "Warning: Issues querying $($resource.Name)"
+                Write-Warning "Warning: Issues querying $($resource.Name)"
             }
 
         } elseif ($resourceType -eq "virtualMachines") {
@@ -157,7 +157,7 @@ function GetResources() {
                     OsType = $vmResource.StorageProfile.OsDisk.OsType;
                 }
             } catch {
-                Write-Debug "Warning: Issue querying $($resource.Name)"
+                Write-Warning "Warning: Issue querying $($resource.Name)"
             }
 
         } elseif ($resourceType -eq "virtualNetworks") {
@@ -176,7 +176,7 @@ function GetResources() {
                     $dchpOptionsText = $dchpOptionsText.Substring(0, $dchpOptionsText.Length-1)
                 }
             } catch {
-                Write-Debug "Warning: Issue detecting Dns Servers Text"
+                Write-Warning "Warning: Issue detecting Dns Servers Text"
             }
 
             # More properties at:
@@ -211,7 +211,7 @@ function GetResources() {
                     }
                 }
             } catch {
-                Write-Debug "Warning: Issue detecting Subnets Text"
+                Write-Warning "Warning: Issue detecting Subnets Text"
             }
 
         } elseif ($resourceType -eq "networkSecurityGroups") {
@@ -267,7 +267,7 @@ function GetResources() {
                     }
                 }
             } catch {
-                Write-Debug "Warning: Issue detecting Security Rules Text"
+                Write-Warning "Warning: Issue detecting Security Rules Text"
             }
         } else {
             $outputTypes[$resourceType] += @{
@@ -279,34 +279,42 @@ function GetResources() {
         }
     }
 
-    $apiManagements = Get-AzureRmApiManagement
-    foreach ($apiManResource in $apiManagements) {
-        $resourceType = "apiManagement"
-        if (-not($outputTypes[$resourceType])) {
-            $outputTypes[$resourceType] = @()
-        }
+    try {
+        $apiManagements = Get-AzureRmApiManagement
+        foreach ($apiManResource in $apiManagements) {
+            $resourceType = "apiManagement"
+            if (-not($outputTypes[$resourceType])) {
+                $outputTypes[$resourceType] = @()
+            }
 
-        $outputTypes[$resourceType] += @{
-            Id = $apiManResource.Id;
-            Name = $apiManResource.Name;
-            ResourceGroup = $apiManResource.ResourceGroupName;
-            Location = $apiManResource.Location;
+            $outputTypes[$resourceType] += @{
+                Id = $apiManResource.Id;
+                Name = $apiManResource.Name;
+                ResourceGroup = $apiManResource.ResourceGroupName;
+                Location = $apiManResource.Location;
+            }
         }
+    } catch {
+        Write-Warning "Warning: Issue querying API Management: $($apiManResource.Name)"
     }
 
-    $appGateways = Get-AzureRmApplicationGateway
-    foreach ($appGateway in $appGateways) {
-        $resourceType = "applicationGateways"
-        if (-not($outputTypes[$resourceType])) {
-            $outputTypes[$resourceType] = @()
-        }
+    try {
+        $appGateways = Get-AzureRmApplicationGateway
+        foreach ($appGateway in $appGateways) {
+            $resourceType = "applicationGateways"
+            if (-not($outputTypes[$resourceType])) {
+                $outputTypes[$resourceType] = @()
+            }
 
-        $outputTypes[$resourceType] += @{
-            Id = $appGateways.Id;
-            Name = $appGateways.Name;
-            ResourceGroup = $appGateways.ResourceGroupName;
-            Location = $appGateways.Location;
+            $outputTypes[$resourceType] += @{
+                Id = $appGateways.Id;
+                Name = $appGateways.Name;
+                ResourceGroup = $appGateways.ResourceGroupName;
+                Location = $appGateways.Location;
+            }
         }
+    } catch {
+        Write-Warning "Warning: Issue querying App Gateway: $($appGateways.Name)"
     }
 
     return $outputTypes
@@ -480,7 +488,10 @@ function ExportToExcel() {
         $sheetCount++
     }
     $workbook.saveas($FilePath)
+    $workbook.close()
     $excelapp.quit()
+
+    [System.Runtime.Interopservices.Marshal]::ReleaseComObject($excelapp)
 }
 
 # Main #############################################
